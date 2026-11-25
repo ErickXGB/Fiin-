@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "314578532235",
+    "project_id": "fiin-3ceb2",
+    "storage_bucket": "fiin-3ceb2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314578532235:android:e116cc9a718847d8cca18e",
+        "android_client_info": {
+          "package_name": "com.erick.fiin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "314578532235-2hobg16be9qdsernrb55fpm7r2at1lov.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.erick.fiin",
+            "certificate_hash": "cfb85a3b9bdbf927dad51461245897eae5e9bc30"
+          }
+        },
+        {
+          "client_id": "314578532235-l4bv3qtqiimm83c89r6v0dpv70iu6l95.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYU8JGoDpbswm7s1vWKEcaCW45f1p4heo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314578532235-l4bv3qtqiimm83c89r6v0dpv70iu6l95.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

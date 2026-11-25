@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fiin</string>
+    <string name="title_activity_main">Fiin</string>
+    <string name="package_name">com.erick.fiin</string>
+    <string name="custom_url_scheme">com.erick.fiin</string>
+</resources>
