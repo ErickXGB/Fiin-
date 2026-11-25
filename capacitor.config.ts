@@ -15,6 +15,10 @@ const config: CapacitorConfig = {
         { id: 'add-income', title: 'Nuevo Ingreso', description: 'Registrar un ingreso rápido' },
       ],
     },
+    SplashScreen: {
+      launchShowDuration: 0,
+      launchAutoHide: true,
+    },
   },
 };
 

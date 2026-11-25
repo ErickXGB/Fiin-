@@ -1,1 +1,0 @@
-import{J as e,Y as t,q as n}from"./index-DIH-OpT9.js";var r=class extends t{async get(){throw this.createUnimplementedError()}async set(){throw this.createUnimplementedError()}async clear(){throw this.createUnimplementedError()}createUnimplementedError(){return new n(`This plugin method is not implemented on this platform.`,e.Unimplemented)}};export{r as AppShortcutsWeb};

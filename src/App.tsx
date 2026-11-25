@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AppShortcuts } from '@capawesome/capacitor-app-shortcuts';
-import AnalysisView from './components/AnalysisView';
 import BottomNav, { type Tab } from './components/BottomNav';
 import HomeView from './components/HomeView';
 import MonthSelector from './components/MonthSelector';
-import SettingsView from './components/SettingsView';
 import TransactionModal from './components/TransactionModal';
 import { useAuth } from './hooks/useAuth';
 import { useFinance } from './hooks/useFinance';
+
+const AnalysisView = lazy(() => import('./components/AnalysisView'));
+const SettingsView = lazy(() => import('./components/SettingsView'));
 
 const TITLES: Record<Tab, string> = { inicio: 'Resumen', analisis: 'Movimientos', ajustes: 'Configuración' };
 
@@ -27,13 +28,9 @@ function LoginScreen({ onLogin }: { onLogin: () => Promise<void> }) {
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-zinc-50 px-6 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-500 text-4xl font-bold text-white shadow-lg shadow-emerald-500/20">
-        $
-      </div>
+      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-500 text-4xl font-bold text-white shadow-lg shadow-emerald-500/20">$</div>
       <h1 className="mt-6 text-3xl font-semibold tracking-tight">Finanzas</h1>
-      <p className="mt-2 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        Gastos, ingresos y presupuestos semanales y mensuales en USD.
-      </p>
+      <p className="mt-2 text-center text-sm text-zinc-500 dark:text-zinc-400">Gastos, ingresos y presupuestos semanales y mensuales en USD.</p>
       <button type="button" onClick={() => void handleLogin()}
         className="mt-10 h-14 w-full max-w-xs rounded-2xl bg-zinc-900 text-base font-semibold text-white shadow-sm active:scale-95 dark:bg-white dark:text-zinc-950">
         Continuar con Google
@@ -44,8 +41,7 @@ function LoginScreen({ onLogin }: { onLogin: () => Promise<void> }) {
 }
 
 interface ShellProps {
-  uid: string; name: string; email: string; photoURL: string | null;
-  onLogout: () => Promise<void>;
+  uid: string; name: string; email: string; photoURL: string | null; onLogout: () => Promise<void>;
 }
 
 function Shell({ uid, name, email, photoURL, onLogout }: ShellProps) {
@@ -56,14 +52,22 @@ function Shell({ uid, name, email, photoURL, onLogout }: ShellProps) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-    const handle = AppShortcuts.addListener('click', (event) => {
-      if (event.shortcutId === 'add-expense' || event.shortcutId === 'add-income') {
-        setModalType(event.shortcutId === 'add-expense' ? 'expense' : 'income');
-        setModalOpen(true);
-      }
-    });
-    return () => { void handle.then((h) => h.remove()); };
+    const trigger = (type: string) => {
+      if (type === 'expense' || type === 'income') { setModalType(type); setModalOpen(true); }
+    };
+    const w = window as unknown as { __FIIN_QUICK_ACTION__?: string };
+    if (w.__FIIN_QUICK_ACTION__) { trigger(w.__FIIN_QUICK_ACTION__); w.__FIIN_QUICK_ACTION__ = undefined; }
+    const onQuick = (e: Event) => trigger((e as CustomEvent<string>).detail);
+    window.addEventListener('fiin_quick_action', onQuick);
+
+    if (Capacitor.isNativePlatform()) {
+      const handle = AppShortcuts.addListener('click', (event) => {
+        if (event.shortcutId === 'add-expense') trigger('expense');
+        else if (event.shortcutId === 'add-income') trigger('income');
+      });
+      return () => { window.removeEventListener('fiin_quick_action', onQuick); void handle.then((h) => h.remove()); };
+    }
+    return () => window.removeEventListener('fiin_quick_action', onQuick);
   }, []);
 
   const handleRemove = async (id: string) => {
@@ -93,14 +97,18 @@ function Shell({ uid, name, email, photoURL, onLogout }: ShellProps) {
             isCurrentMonth={finance.isCurrentMonth} onEditLimits={() => setActiveTab('ajustes')} />
         )}
         {activeTab === 'analisis' && (
-          <AnalysisView transactions={finance.monthlyTransactions} annualTransactions={finance.annualTransactions}
-            year={finance.selectedDate.getFullYear()} onRemove={handleRemove} />
+          <Suspense fallback={null}>
+            <AnalysisView transactions={finance.monthlyTransactions} annualTransactions={finance.annualTransactions}
+              year={finance.selectedDate.getFullYear()} onRemove={handleRemove} />
+          </Suspense>
         )}
         {activeTab === 'ajustes' && (
-          <SettingsView uid={uid} name={name} email={email} photoURL={photoURL}
-            weeklyLimit={finance.weeklyStats.limit} monthlyLimit={finance.monthlyStats.limit}
-            selectedDate={finance.selectedDate} transactions={finance.monthlyTransactions}
-            saveBudget={finance.saveBudget} onLogout={onLogout} />
+          <Suspense fallback={null}>
+            <SettingsView uid={uid} name={name} email={email} photoURL={photoURL}
+              weeklyLimit={finance.weeklyStats.limit} monthlyLimit={finance.monthlyStats.limit}
+              selectedDate={finance.selectedDate} transactions={finance.monthlyTransactions}
+              saveBudget={finance.saveBudget} onLogout={onLogout} />
+          </Suspense>
         )}
       </main>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Transaction, TransactionType } from '../types/finance';
 
 const TYPES: { id: TransactionType; label: string; active: string }[] = [
@@ -34,6 +34,7 @@ export default function TransactionModal({ open, initialType = 'expense', onClos
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -44,6 +45,8 @@ export default function TransactionModal({ open, initialType = 'expense', onClos
     setNote('');
     setSaving(false);
     setError('');
+    const timer = setTimeout(() => inputRef.current?.focus(), 60);
+    return () => clearTimeout(timer);
   }, [open, initialType]);
 
   if (!open) return null;
@@ -93,7 +96,7 @@ export default function TransactionModal({ open, initialType = 'expense', onClos
 
         <label className="mt-4 flex items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950">
           <span className="text-3xl font-semibold text-zinc-400 dark:text-zinc-500">$</span>
-          <input autoFocus value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="0.00" aria-label="Monto"
+          <input ref={inputRef} autoFocus value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="0.00" aria-label="Monto"
             className="w-full bg-transparent text-center text-4xl font-bold text-zinc-900 outline-none placeholder:text-zinc-300 dark:text-zinc-100 dark:placeholder:text-zinc-700" />
         </label>
 
