@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Budget, BudgetPeriod, Transaction } from '../types/finance';
+import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
+import type { Account, Budget, BudgetPeriod, Transaction } from '../types/finance';
 import {
   createBudget, createTransaction as createTransactionDoc, deleteTransaction as deleteTransactionDoc,
   subscribeBudgets, subscribeTransactions, updateBudget, type NewBudget, type NewTransaction,
 } from '../services/financeService';
+import {
+  createAccount, deleteAccount, ensureDefaultAccount,
+  subscribeAccounts, updateAccount, type NewAccount,
+} from '../services/accountService';
 import { getMonthRange, getWeekRange, isDateInRange } from '../utils/dateUtils';
 
 export interface PeriodStats {
@@ -37,25 +43,28 @@ const incomeOf = (txs: Transaction[]): number =>
 export function useFinance(uid: string | null) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState<boolean>(Boolean(uid));
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
 
   useEffect(() => {
     if (!uid) {
-      setTransactions([]); setBudgets([]); setLoading(false);
+      setTransactions([]); setBudgets([]); setAccounts([]); setLoading(false);
       return;
     }
     setLoading(true);
     let active = true;
-    const pending = { transactions: true, budgets: true };
+    const pending = { transactions: true, budgets: true, accounts: true };
     const settle = (key: keyof typeof pending) => {
       if (!active || !pending[key]) return;
       pending[key] = false;
-      if (!pending.transactions && !pending.budgets) setLoading(false);
+      if (!pending.transactions && !pending.budgets && !pending.accounts) setLoading(false);
     };
+    void ensureDefaultAccount(uid);
     const unsubTx = subscribeTransactions(uid, (d) => { setTransactions(d); settle('transactions'); }, () => settle('transactions'));
     const unsubBg = subscribeBudgets(uid, (d) => { setBudgets(d); settle('budgets'); }, () => settle('budgets'));
-    return () => { active = false; unsubTx(); unsubBg(); };
+    const unsubAc = subscribeAccounts(uid, (d) => { setAccounts(d); settle('accounts'); }, () => settle('accounts'));
+    return () => { active = false; unsubTx(); unsubBg(); unsubAc(); };
   }, [uid]);
 
   const todayKey = toDateKey(new Date());
@@ -79,8 +88,22 @@ export function useFinance(uid: string | null) {
     [transactions, yearStr],
   );
 
-  const weeklyStats = useMemo(() => toStats(weeklyTransactions, pickBudget(budgets, 'weekly', todayKey)), [weeklyTransactions, budgets, todayKey]);
-  const monthlyStats = useMemo(() => toStats(monthlyTransactions, pickBudget(budgets, 'monthly', selectedKey)), [monthlyTransactions, budgets, selectedKey]);
+  const currentWeeklyBudget = useMemo(() => pickBudget(budgets, 'weekly', todayKey), [budgets, todayKey]);
+  const currentMonthlyBudget = useMemo(() => pickBudget(budgets, 'monthly', selectedKey), [budgets, selectedKey]);
+
+  const weeklyStats = useMemo(() => toStats(weeklyTransactions, currentWeeklyBudget), [weeklyTransactions, currentWeeklyBudget]);
+  const monthlyStats = useMemo(() => toStats(monthlyTransactions, currentMonthlyBudget), [monthlyTransactions, currentMonthlyBudget]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+    const values: [string, string][] = [
+      ['weekly_spent', usd.format(weeklyStats.spent)], ['weekly_limit', usd.format(weeklyStats.limit)],
+      ['weekly_remaining', usd.format(weeklyStats.remaining)],
+      ['weekly_percent', String(Math.max(0, Math.min(100, Math.round(weeklyStats.percentage))))],
+    ];
+    values.forEach(([key, value]) => void Preferences.set({ key, value }));
+  }, [weeklyStats]);
 
   const weeklyIncome = useMemo(() => incomeOf(weeklyTransactions), [weeklyTransactions]);
   const monthlyIncome = useMemo(() => incomeOf(monthlyTransactions), [monthlyTransactions]);
@@ -110,9 +133,29 @@ export function useFinance(uid: string | null) {
     return createTransactionDoc(uid, data);
   }, [uid]);
 
-  const removeTransaction = useCallback((id: string) => {
+  const totalWalletBalance = useMemo(
+    () => accounts.reduce((sum, a) => sum + a.balance, 0),
+    [accounts],
+  );
+
+  const removeTransaction = useCallback((id: string, tx?: Pick<Transaction, 'accountId' | 'toAccountId' | 'type' | 'amount'>) => {
     if (!uid) throw new Error('Usuario no autenticado');
-    return deleteTransactionDoc(uid, id);
+    return deleteTransactionDoc(uid, id, tx);
+  }, [uid]);
+
+  const addAccount = useCallback((data: NewAccount) => {
+    if (!uid) throw new Error('Usuario no autenticado');
+    return createAccount(uid, data);
+  }, [uid]);
+
+  const editAccount = useCallback((id: string, data: Partial<NewAccount>) => {
+    if (!uid) throw new Error('Usuario no autenticado');
+    return updateAccount(uid, id, data);
+  }, [uid]);
+
+  const removeAccount = useCallback((id: string) => {
+    if (!uid) throw new Error('Usuario no autenticado');
+    return deleteAccount(uid, id);
   }, [uid]);
 
   const saveBudget = useCallback(async (data: NewBudget, id?: string) => {
@@ -123,9 +166,11 @@ export function useFinance(uid: string | null) {
   }, [uid, budgets]);
 
   return {
-    loading, weeklyStats, monthlyStats, weeklyIncome, monthlyIncome, netBalance,
+    loading, accounts, totalWalletBalance, weeklyStats, monthlyStats, weeklyIncome, monthlyIncome, netBalance,
     annualIncome, annualExpense, annualBalance,
+    currentWeeklyBudget, currentMonthlyBudget,
     weeklyTransactions, monthlyTransactions, annualTransactions, selectedDate, isCurrentMonth,
     prevMonth, nextMonth, createTransaction, removeTransaction, saveBudget,
+    addAccount, editAccount, removeAccount,
   };
 }

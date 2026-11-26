@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
+        android:name=".FiinApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -31,6 +32,19 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/fiin_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".FiinWeeklyWidgetProvider"
+            android:exported="true"
+            android:label="Presupuesto Semanal Fiin">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.erick.fiin.UPDATE_WEEKLY_WIDGET" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/fiin_weekly_widget_info" />
         </receiver>
 
         <service

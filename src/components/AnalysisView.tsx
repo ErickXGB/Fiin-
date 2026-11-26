@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import CategoryChart from './CategoryChart';
 import TransactionList from './TransactionList';
-import type { Transaction } from '../types/finance';
+import type { Account, Transaction } from '../types/finance';
 import { formatCurrency } from '../utils/dateUtils';
 
 type Filter = 'all' | 'expense' | 'income';
@@ -18,12 +18,13 @@ const formatMonth = (key: string) => {
 interface AnalysisViewProps {
   transactions: Transaction[];
   annualTransactions?: Transaction[];
+  accounts?: Account[];
   year?: number;
   onRemove: (id: string) => Promise<void>;
 }
 
 export default function AnalysisView({
-  transactions, annualTransactions = [], year = new Date().getFullYear(), onRemove,
+  transactions, annualTransactions = [], accounts = [], year = new Date().getFullYear(), onRemove,
 }: AnalysisViewProps) {
   const [filter, setFilter] = useState<Filter>('all');
   const [annualOpen, setAnnualOpen] = useState(false);
@@ -70,7 +71,7 @@ export default function AnalysisView({
             ))}
           </div>
         </div>
-        <TransactionList transactions={visible} onRemove={onRemove} />
+        <TransactionList transactions={visible} accounts={accounts} onRemove={onRemove} />
       </section>
 
       <section className={cardCls}>

@@ -1,4 +1,4 @@
-export type TransactionType = 'expense' | 'income';
+export type TransactionType = 'expense' | 'income' | 'transfer';
 
 export type BudgetPeriod = 'weekly' | 'monthly';
 
@@ -20,6 +20,14 @@ export interface Budget {
   createdAt?: number;
 }
 
+export interface Account {
+  id: string;
+  name: string;
+  type: 'cash' | 'bank';
+  balance: number;
+  color?: string;
+}
+
 export interface Transaction {
   id: string;
   type: TransactionType;
@@ -28,5 +36,8 @@ export interface Transaction {
   /** Fecha local en formato YYYY-MM-DD. */
   date: string;
   note: string;
+  accountId?: string;
+  /** Cuenta destino (solo transferencias). */
+  toAccountId?: string;
   createdAt?: number;
 }

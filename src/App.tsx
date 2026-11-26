@@ -94,20 +94,30 @@ function Shell({ uid, name, email, photoURL, onLogout }: ShellProps) {
         {activeTab === 'inicio' && (
           <HomeView weeklyStats={finance.weeklyStats} monthlyStats={finance.monthlyStats}
             monthlyIncome={finance.monthlyIncome} netBalance={finance.netBalance}
-            isCurrentMonth={finance.isCurrentMonth} onEditLimits={() => setActiveTab('ajustes')} />
+            isCurrentMonth={finance.isCurrentMonth}
+            accounts={finance.accounts} totalWalletBalance={finance.totalWalletBalance}
+            weeklyTransactions={finance.weeklyTransactions}
+            monthlyTransactions={finance.monthlyTransactions}
+            weeklyBudget={finance.currentWeeklyBudget}
+            monthlyBudget={finance.currentMonthlyBudget}
+            onEditLimits={() => setActiveTab('ajustes')} />
         )}
         {activeTab === 'analisis' && (
           <Suspense fallback={null}>
             <AnalysisView transactions={finance.monthlyTransactions} annualTransactions={finance.annualTransactions}
-              year={finance.selectedDate.getFullYear()} onRemove={handleRemove} />
+              accounts={finance.accounts} year={finance.selectedDate.getFullYear()} onRemove={handleRemove} />
           </Suspense>
         )}
         {activeTab === 'ajustes' && (
           <Suspense fallback={null}>
             <SettingsView uid={uid} name={name} email={email} photoURL={photoURL}
               weeklyLimit={finance.weeklyStats.limit} monthlyLimit={finance.monthlyStats.limit}
+              weeklyCategoryLimits={finance.currentWeeklyBudget?.categoryLimits}
+              monthlyCategoryLimits={finance.currentMonthlyBudget?.categoryLimits}
               selectedDate={finance.selectedDate} transactions={finance.monthlyTransactions}
-              saveBudget={finance.saveBudget} onLogout={onLogout} />
+              accounts={finance.accounts} totalWalletBalance={finance.totalWalletBalance}
+              saveBudget={finance.saveBudget} onLogout={onLogout}
+              onAddAccount={finance.addAccount} onDeleteAccount={finance.removeAccount} />
           </Suspense>
         )}
       </main>
@@ -120,7 +130,7 @@ function Shell({ uid, name, email, photoURL, onLogout }: ShellProps) {
       )}
 
       <BottomNav activeTab={activeTab} onChange={setActiveTab} />
-      <TransactionModal open={modalOpen} initialType={modalType} onClose={() => setModalOpen(false)} onSave={finance.createTransaction} />
+      <TransactionModal open={modalOpen} initialType={modalType} accounts={finance.accounts} onClose={() => setModalOpen(false)} onSave={finance.createTransaction} />
     </div>
   );
 }

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_weekly_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_weekly_bg"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Presupuesto Semanal"
+            android:textColor="#A1A1AA"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_weekly_available"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Disponible: $0.00"
+            android:textColor="#10B981"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_weekly_amount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="$0.00 de $0.00"
+        android:textColor="#FAFAFA"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <ProgressBar
+        android:id="@+id/widget_weekly_progress"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="4dp"
+        android:indeterminate="false"
+        android:max="100"
+        android:progress="0"
+        android:progressBackgroundTint="#2A2A2A"
+        android:progressTint="#10B981" />
+</LinearLayout>

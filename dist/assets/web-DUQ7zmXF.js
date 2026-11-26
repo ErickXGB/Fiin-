@@ -1,0 +1,1 @@
+import{at as e,it as t,ot as n}from"./index-CFrfXlSH.js";var r=class extends n{async get(){throw this.createUnimplementedError()}async set(){throw this.createUnimplementedError()}async clear(){throw this.createUnimplementedError()}createUnimplementedError(){return new t(`This plugin method is not implemented on this platform.`,e.Unimplemented)}};export{r as AppShortcutsWeb};
